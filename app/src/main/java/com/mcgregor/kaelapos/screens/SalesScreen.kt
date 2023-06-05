@@ -4,22 +4,35 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
 import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.rememberDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -39,6 +52,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,6 +62,7 @@ import com.mcgregor.kaelapos.models.ProductTransaction
 import com.mcgregor.kaelapos.viewmodels.ProductViewModel
 import com.mcgregor.kaelapos.widgets.SearchBar
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = hiltViewModel()) {
 
@@ -57,14 +72,14 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
     }
     val selectedProduct = remember { mutableStateOf(Product("", "")) }
     val openDialog = remember { mutableStateOf(false) }
-    val itemQuantity = rememberSaveable { mutableStateOf("") }
+    val itemQuantity = remember { mutableStateOf("") }
     val totalBillAmount = remember { mutableStateOf(0.0) }
     val list1 = remember {
         mutableStateListOf(ProductTransaction(Product("", ""), 0.0, 0.0))
     }
     val context = LocalContext.current
     val isDarkMode = isSystemInDarkTheme()
-    val hideInvoice = remember { mutableStateOf(true) }
+    val hideInvoice = rememberSaveable { mutableStateOf(true) }
 
     //get screen width
     val configuration = LocalConfiguration.current
@@ -100,25 +115,30 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
             .background(color = backgroundColor)
             .padding(4.dp)
     ) {
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)){
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             SearchBar(searchText = searchText, onSearchTextChanged = {
                 searchText = it
                 hideInvoice.value = true
             })
         }
 
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .weight(5f)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(5f)
+        ) {
             LazyColumn {
                 items(filteredList) { product ->
                     ClickableText(text = buildAnnotatedString {
                         withStyle(
                             style = SpanStyle(
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 30.sp
+                                fontSize = 30.sp,
+                                color = textColor
                             )
                         ) {
                             append(product.productName)
@@ -146,7 +166,46 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
             Divider(modifier = Modifier.padding(top = 6.dp, bottom = 6.dp))
 
             LazyColumn {
-                items(selectedProductList) {
+                itemsIndexed(items = selectedProductList, key = null /*{ _, listItem ->
+                    listItem.hashCode()
+                }*/) { index, item ->
+                    val state = rememberDismissState(
+                        confirmStateChange = {
+                            if (it == DismissValue.DismissedToStart) {
+                                selectedProductList.remove(item)
+                            }
+                            true
+                        }
+                    )
+                    SwipeToDismiss(state = state, background = {
+
+                        val color = when (state.dismissDirection) {
+                            DismissDirection.StartToEnd -> Color.Transparent
+                            DismissDirection.EndToStart -> Color.Red
+                            null -> Color.Magenta
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color = color)
+                                .padding(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = Color.Black,
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                            )
+                        }
+                    }, dismissContent = {
+                        SampleItems(item, columnPortionSize)
+                    },
+                        directions = setOf(DismissDirection.EndToStart))
+                    Divider()
+                }
+                
+                
+                /*items(selectedProductList) {
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -175,15 +234,20 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                         )
                     }
 
-                }
+                }*/
             }
+            //LinearProgressIndicator(progress = 0.5f)
             Divider(modifier = Modifier.padding(top = 6.dp, bottom = 6.dp))
         }
-        Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1.6f)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .weight(0.8f)
                     .padding(end = 20.dp),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.Bottom
@@ -202,9 +266,23 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                 )
             }
 
-            TODO() //put 2/3/4 buttons here for print/cash/credit/cancel
-        }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.8f),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(onClick = { /*TODO*/ }) {
+                    Text(text = "Cash")
+                }
+                
+                Button(onClick = { /*TODO*/ }) {
+                    Text(text = "Cancel")
+                }
+            }
 
+            // TODO() //put 2/3/4 buttons here for print/cash/credit/cancel
+        }
 
 
         //}
@@ -285,9 +363,51 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
             )
         }
 
-
     }
 }
+
+
+
+@Composable
+fun SampleItems(item: ProductTransaction, columnPortionSize: Dp){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(30.dp)
+                .background(MaterialTheme.colors.surface), horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = item.product.productName,
+                modifier = Modifier
+                    .width(columnPortionSize + 30.dp)
+                    .padding(bottom = 10.dp)
+            )
+            Text(
+                text = item.productQuantity.toString(),
+                modifier = Modifier
+                    .width(columnPortionSize - 10.dp)
+                    .padding(bottom = 10.dp)
+            )
+            Text(
+                text = "M${
+                    String.format(
+                        "%.2f",
+                        item.product.productPrice.toDoubleOrNull()
+                    )
+                }",
+                modifier = Modifier
+                    .width(columnPortionSize - 10.dp)
+                    .padding(bottom = 10.dp)
+            )
+            Text(
+                text = "M${String.format("%.2f", item.productTotalAmount)}",
+                modifier = Modifier
+                    .width(columnPortionSize - 10.dp)
+                    .padding(bottom = 10.dp)
+            )
+        }
+}
+
 
 fun createProductTransaction(
     product: Product,

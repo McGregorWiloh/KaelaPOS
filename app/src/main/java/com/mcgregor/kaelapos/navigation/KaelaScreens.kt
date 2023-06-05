@@ -7,4 +7,5 @@ enum class KaelaScreens {
     ProductSelectionScreen,
     ItemListScreen,
     SalesScreen,
+    SuppliersScreen
 }

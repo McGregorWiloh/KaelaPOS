@@ -5,11 +5,16 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 
 private val DarkColorPalette = darkColors(
     primary = Purple200,
     primaryVariant = Purple700,
-    secondary = Teal200
+    secondary = Teal200,
+    onPrimary = Color.White
 )
 
 private val LightColorPalette = lightColors(
@@ -28,8 +33,9 @@ private val LightColorPalette = lightColors(
 )
 
 @Composable
-fun KaelaPOSTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val colors = if (darkTheme) {
+fun KaelaPOSTheme(content: @Composable () -> Unit) {
+    val isDarkThemeEnabled = isSystemInDarkTheme() || KaelaPOSThemeSettings.isDarkThemeEnabled
+    val colors = if (isDarkThemeEnabled) {
         DarkColorPalette
     } else {
         LightColorPalette
@@ -41,4 +47,11 @@ fun KaelaPOSTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composab
         shapes = Shapes,
         content = content
     )
+}
+
+/**
+ * Allows changing between light and a dark theme from the app's settings.
+ */
+object KaelaPOSThemeSettings {
+    var isDarkThemeEnabled by mutableStateOf(false)
 }

@@ -148,7 +148,7 @@ fun MainScreenMenu(navController: NavController) {
                     modifier = Modifier
                         .fillMaxSize()
                         .clickable(onClick = {
-                            Log.d("TAG1", "This works")
+                            navController.navigate(KaelaScreens.SuppliersScreen.name)
                         }),
                     shape = RoundedCornerShape(14.dp),
                     backgroundColor = Color.Gray
