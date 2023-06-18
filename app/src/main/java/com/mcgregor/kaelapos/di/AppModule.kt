@@ -2,7 +2,7 @@ package com.mcgregor.kaelapos.di
 
 import android.app.Application
 import androidx.room.Room
-import com.mcgregor.kaelapos.database.ProductDatabase
+import com.mcgregor.kaelapos.database.KaelaPOSDatabase
 import com.mcgregor.kaelapos.repository.ProductRepository
 import com.mcgregor.kaelapos.repository.ProductRepositoryImp
 import dagger.Module
@@ -17,17 +17,17 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideProductDatabase(app: Application): ProductDatabase {
+    fun provideKaelaPOSDatabase(app: Application): KaelaPOSDatabase {
         return Room.databaseBuilder(
             app,
-            ProductDatabase::class.java,
-            "product_db"
+            KaelaPOSDatabase::class.java,
+            "kaelapos_database"
         ).build()
     }
 
     @Provides
     @Singleton
-    fun provideProductRepository(db: ProductDatabase): ProductRepository {
+    fun provideProductRepository(db: KaelaPOSDatabase): ProductRepository {
         return ProductRepositoryImp(db.productDao)
     }
 }
