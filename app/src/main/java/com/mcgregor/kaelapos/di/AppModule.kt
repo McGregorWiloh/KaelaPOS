@@ -3,8 +3,8 @@ package com.mcgregor.kaelapos.di
 import android.app.Application
 import androidx.room.Room
 import com.mcgregor.kaelapos.database.KaelaPOSDatabase
-import com.mcgregor.kaelapos.repository.ProductRepository
-import com.mcgregor.kaelapos.repository.ProductRepositoryImp
+import com.mcgregor.kaelapos.repository.KaelaPOSRepository
+import com.mcgregor.kaelapos.repository.KaelaPOSRepositoryImp
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +27,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideProductRepository(db: KaelaPOSDatabase): ProductRepository {
-        return ProductRepositoryImp(db.productDao)
+    fun provideKaelaPOSRepository(db: KaelaPOSDatabase): KaelaPOSRepository {
+        return KaelaPOSRepositoryImp(db.productDao)
     }
 }

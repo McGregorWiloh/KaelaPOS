@@ -4,9 +4,9 @@ import com.mcgregor.kaelapos.dao.ProductDao
 import com.mcgregor.kaelapos.models.Product
 import kotlinx.coroutines.flow.Flow
 
-class ProductRepositoryImp(
+class KaelaPOSRepositoryImp(
     private val productDao: ProductDao
-): ProductRepository {
+): KaelaPOSRepository {
 
     override fun getAllProducts(): Flow<List<Product>> {
         return productDao.getProductList()

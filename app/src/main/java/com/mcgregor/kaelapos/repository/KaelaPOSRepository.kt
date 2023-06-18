@@ -3,7 +3,7 @@ package com.mcgregor.kaelapos.repository
 import com.mcgregor.kaelapos.models.Product
 import kotlinx.coroutines.flow.Flow
 
-interface ProductRepository {
+interface KaelaPOSRepository {
 
     fun getAllProducts(): Flow<List<Product>>
 

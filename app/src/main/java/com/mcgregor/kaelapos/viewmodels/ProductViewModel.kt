@@ -4,14 +4,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mcgregor.kaelapos.models.Product
-import com.mcgregor.kaelapos.repository.ProductRepository
+import com.mcgregor.kaelapos.repository.KaelaPOSRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(
-    private val productRepository: ProductRepository, savedStateHandle: SavedStateHandle
+    private val kaelaPOSRepository: KaelaPOSRepository, savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     /*var product by mutableStateOf<Product?>(null)
         private set
@@ -26,7 +26,7 @@ class ProductViewModel @Inject constructor(
         val productId = savedStateHandle.get<Int>("productId")!!
         if (productId != -1) {
             viewModelScope.launch {
-                productRepository.getProductById(productId)?.let {
+                kaelaPOSRepository.getProductById(productId)?.let {
                     productName = it.productName
                     productPrice = it.productPrice
                     this@ProductViewModel.product = product
@@ -36,23 +36,23 @@ class ProductViewModel @Inject constructor(
         }
     }*/
 
-    val products = productRepository.getAllProducts()
+    val products = kaelaPOSRepository.getAllProducts()
 
     fun saveProductToDatabase(product: Product){
         viewModelScope.launch {
-            productRepository.insertProduct(product) }
+            kaelaPOSRepository.insertProduct(product) }
     }
 
     fun deleteProductFromDatabase(product: Product){
         viewModelScope.launch {
-            productRepository.deleteProduct(product)
+            kaelaPOSRepository.deleteProduct(product)
         }
     }
 
     fun getProductFromDatabaseById(productId: Int): Product {
         var product = Product("", "")
         viewModelScope.launch {
-         product = productRepository.getProductById(productId)!!
+         product = kaelaPOSRepository.getProductById(productId)!!
         }
         return product
     }
