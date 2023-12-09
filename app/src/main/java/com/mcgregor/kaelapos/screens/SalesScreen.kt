@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -55,6 +54,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mcgregor.kaelapos.models.Product
@@ -71,9 +71,13 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
         mutableStateListOf<ProductTransaction>()
     }
     val selectedProduct = remember { mutableStateOf(Product("", "")) }
+    val cashDialog = remember { mutableStateOf(false) }
     val openDialog = remember { mutableStateOf(false) }
+    val transactionDialog = remember { mutableStateOf(false) }
+    val cashOffered = remember { mutableStateOf("") }
     val itemQuantity = remember { mutableStateOf("") }
     val totalBillAmount = remember { mutableStateOf(0.0) }
+    val change = remember { mutableStateOf("") }
     val list1 = remember {
         mutableStateListOf(ProductTransaction(Product("", ""), 0.0, 0.0))
     }
@@ -272,7 +276,7 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                     .weight(0.8f),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button(onClick = { /*TODO*/ }) {
+                Button(onClick = { cashDialog.value = true }) {
                     Text(text = "Cash")
                 }
                 
@@ -286,7 +290,7 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
 
 
         //}
-
+        // This is for picking the product quantity
         if (openDialog.value) {
 
             AlertDialog(
@@ -362,6 +366,131 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                 }
             )
         }
+
+        //This is for entering the cash offered
+        if (cashDialog.value) {
+
+            AlertDialog(
+                onDismissRequest = {
+                    // Dismiss the dialog when the user clicks outside the dialog or on the back
+                    // button. If you want to disable that functionality, simply use an empty
+                    // onCloseRequest.
+                    cashDialog.value = false
+                },
+                title = {
+                    Text(
+                        text = "Enter Amount",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                },
+                text = {
+                    TextField(
+                        value = cashOffered.value,
+                        onValueChange = {
+                            if (it.isEmpty()) {
+                                cashOffered.value = it
+                            } else {
+                                cashOffered.value = when (it.toDoubleOrNull()) {
+                                    null -> cashOffered.value
+                                    else -> it
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+
+                },
+
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            cashDialog.value = false
+                            if (cashOffered.value.isNotEmpty()) {
+                                change.value = (cashOffered.value.toDouble() - totalBillAmount.value).toString()
+                                Toast.makeText(
+                                    context,
+                                    "Transaction successful, your change is ${change.value}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            searchText = ""
+                            cashOffered.value = ""
+                            transactionDialog.value = true
+                        }, modifier = Modifier.padding(start = 75.dp, end = 16.dp)
+                    ) {
+                        Text("Make Sale")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = {
+                            cashDialog.value = false
+                            cashOffered.value = ""
+                            searchText = ""
+                        }, colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
+                    ) {
+                        Text("Cancel")
+                    }
+                },
+                properties = DialogProperties(
+                    dismissOnClickOutside = false,
+                    dismissOnBackPress = false
+                )
+            )
+        }
+
+        if (transactionDialog.value) {
+
+            AlertDialog(
+                onDismissRequest = {
+                    // Dismiss the dialog when the user clicks outside the dialog or on the back
+                    // button. If you want to disable that functionality, simply use an empty
+                    // onCloseRequest.
+                    transactionDialog.value = false
+                },
+                title = {
+                    Text(
+                        text = "Transaction Successful",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                },
+                text = {
+                    Text(text = "Your change is ${change.value}")
+
+                },
+
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            transactionDialog.value = false
+                            selectedProductList.clear() //clears the selected products after transaction
+                        }, modifier = Modifier.padding(start = 75.dp, end = 16.dp)
+                    ) {
+                        Text("Print")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = {
+                            transactionDialog.value = false
+                            selectedProductList.clear() //clears the selected products after transaction
+                        }, colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
+                    ) {
+                        Text("Cancel")
+                    }
+                },
+                properties = DialogProperties(
+                    dismissOnClickOutside = false,
+                    dismissOnBackPress = false
+                )
+            )
+        }
+
+
+
 
     }
 }
