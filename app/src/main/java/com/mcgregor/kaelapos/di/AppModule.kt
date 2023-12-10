@@ -28,6 +28,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideKaelaPOSRepository(db: KaelaPOSDatabase): KaelaPOSRepository {
-        return KaelaPOSRepositoryImp(db.productDao)
+        return KaelaPOSRepositoryImp(db.productDao, db.supplierDao)
     }
 }
