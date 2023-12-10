@@ -70,6 +70,7 @@ fun MainScreen(
 ) {
 
     val productsList = viewModel.products.collectAsState(initial = emptyList())
+    val context = LocalContext.current
     var searchText by remember {
         mutableStateOf("")
     }
@@ -83,7 +84,7 @@ fun MainScreen(
 
     Scaffold(
         topBar = { AppBar(navController) },
-        floatingActionButton = { AddFb(navController) }
+        floatingActionButton = { AddFb(navController, "first_transaction", context) }
     ) {
 
         MainScreenMenu(navController)

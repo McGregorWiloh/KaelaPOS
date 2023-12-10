@@ -7,7 +7,7 @@ import com.mcgregor.kaelapos.dao.SupplierDao
 import com.mcgregor.kaelapos.models.Product
 import com.mcgregor.kaelapos.models.Supplier
 
-@Database(entities = [Product::class, Supplier::class], version = 1, exportSchema = false)
+@Database(entities = [Product::class, Supplier::class], version = 2, exportSchema = false)
 abstract class KaelaPOSDatabase : RoomDatabase() {
 
     abstract val productDao: ProductDao

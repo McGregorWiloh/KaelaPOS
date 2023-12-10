@@ -1,5 +1,6 @@
 package com.mcgregor.kaelapos.dao
 
+import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -9,6 +10,7 @@ import com.mcgregor.kaelapos.models.Product
 import com.mcgregor.kaelapos.models.Supplier
 import kotlinx.coroutines.flow.Flow
 
+@Dao
 interface SupplierDao {
 
     @Query("SELECT * FROM suppliers")

@@ -22,7 +22,9 @@ object AppModule {
             app,
             KaelaPOSDatabase::class.java,
             "kaelapos_database"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
