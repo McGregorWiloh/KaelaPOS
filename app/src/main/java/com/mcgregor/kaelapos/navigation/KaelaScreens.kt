@@ -8,5 +8,6 @@ enum class KaelaScreens {
     ItemListScreen,
     SalesScreen,
     SuppliersScreen,
-    NewSupplierScreen
+    NewSupplierScreen,
+    ReceiveItemScreen
 }

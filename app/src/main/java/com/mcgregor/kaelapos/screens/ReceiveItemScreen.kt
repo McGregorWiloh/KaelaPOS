@@ -1,12 +1,15 @@
 package com.mcgregor.kaelapos.screens
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,13 +26,15 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.Divider
+import androidx.compose.material.DropdownMenu
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.IconButton
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.rememberDismissState
 import androidx.compose.runtime.Composable
@@ -41,6 +46,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,7 +57,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -60,28 +65,33 @@ import androidx.navigation.NavHostController
 import com.mcgregor.kaelapos.models.Product
 import com.mcgregor.kaelapos.models.ProductTransaction
 import com.mcgregor.kaelapos.models.Supplier
+import com.mcgregor.kaelapos.navigation.KaelaScreens
+import com.mcgregor.kaelapos.viewmodels.ProductTransactionViewModel
 import com.mcgregor.kaelapos.viewmodels.ProductViewModel
+import com.mcgregor.kaelapos.viewmodels.SupplierViewModel
 import com.mcgregor.kaelapos.widgets.SearchBar
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = hiltViewModel()) {
-
+fun ReceiveItemScreen(navController: NavHostController,
+                      viewModel: ProductViewModel = hiltViewModel(),
+                      viewModel2: SupplierViewModel = hiltViewModel(),
+                      viewModel3: ProductTransactionViewModel = hiltViewModel()
+) {
     val productsList = viewModel.products.collectAsState(initial = emptyList())
+    val suppliersList = viewModel2.suppliers.collectAsState(initial = emptyList())
     val selectedProductList = remember {
         mutableStateListOf<ProductTransaction>()
     }
+    val isVisible = rememberSaveable { mutableStateOf(true) }
+    val show = rememberSaveable { mutableStateOf(true) }
     val selectedProduct = remember { mutableStateOf(Product("", "")) }
-    val cashDialog = remember { mutableStateOf(false) }
     val openDialog = remember { mutableStateOf(false) }
     val transactionDialog = remember { mutableStateOf(false) }
-    val cashOffered = remember { mutableStateOf("") }
+    val expanded = rememberSaveable { mutableStateOf(false) }
+    val selectedSupplier = remember { mutableStateOf(Supplier("", "", "")) }
     val itemQuantity = remember { mutableStateOf("") }
     val totalBillAmount = remember { mutableStateOf(0.0) }
-    val change = remember { mutableStateOf("") }
-    val list1 = remember {
-        mutableStateListOf(ProductTransaction(Product("", ""), 0.0, 0.0))
-    }
     val context = LocalContext.current
     val isDarkMode = isSystemInDarkTheme()
     val hideInvoice = rememberSaveable { mutableStateOf(true) }
@@ -112,7 +122,6 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
             it.productName.contains(searchText, ignoreCase = true)
         }
     }
-
 
     Column(
         modifier = Modifier
@@ -208,38 +217,9 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                         directions = setOf(DismissDirection.EndToStart))
                     Divider()
                 }
-                
-                
-                /*items(selectedProductList) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp), horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = it.product.productName,
-                            modifier = Modifier.width(columnPortionSize + 30.dp)
-                        )
-                        Text(
-                            text = it.productQuantity.toString(),
-                            modifier = Modifier.width(columnPortionSize - 10.dp)
-                        )
-                        Text(
-                            text = "M${
-                                String.format(
-                                    "%.2f",
-                                    it.product.productPrice.toDoubleOrNull()
-                                )
-                            }",
-                            modifier = Modifier.width(columnPortionSize - 10.dp)
-                        )
-                        Text(
-                            text = "M${String.format("%.2f", it.productTotalAmount)}",
-                            modifier = Modifier.width(columnPortionSize - 10.dp)
-                        )
-                    }
 
-                }*/
+
+
             }
             //LinearProgressIndicator(progress = 0.5f)
             Divider(modifier = Modifier.padding(top = 6.dp, bottom = 6.dp))
@@ -277,16 +257,23 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                     .weight(0.8f),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button(onClick = { cashDialog.value = true }) {
-                    Text(text = "Cash")
+                Button(onClick = {
+                    if (selectedProductList.isEmpty()) {
+                        Toast.makeText(context, "You can't save an empty invoice bill!!", Toast.LENGTH_SHORT).show()
+                    }
+                    else {
+                        transactionDialog.value = true
+                    } }) {
+                    Text(text = "Save")
                 }
-                
-                Button(onClick = { /*TODO*/ }) {
+
+                Button(onClick = {
+                    selectedProductList.clear()
+                    navController.popBackStack(KaelaScreens.MainScreen.name, false)
+                }) {
                     Text(text = "Cancel")
                 }
             }
-
-            // TODO() //put 2/3/4 buttons here for print/cash/credit/cancel
         }
 
 
@@ -309,22 +296,37 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                     )
                 },
                 text = {
-                    TextField(
-                        value = itemQuantity.value,
-                        label = { Text(text = "Enter Quantity") },
-                        onValueChange = {
-                            if (it.isEmpty()) {
-                                itemQuantity.value = it
-                            } else {
-                                itemQuantity.value = when (it.toDoubleOrNull()) {
-                                    null -> itemQuantity.value
-                                    else -> it
+                    Column {
+                        TextField(
+                            value = itemQuantity.value,
+                            label = { Text(text = "Enter Quantity") },
+                            onValueChange = {
+                                if (it.isEmpty()) {
+                                    itemQuantity.value = it
+                                } else {
+                                    itemQuantity.value = when (it.toDoubleOrNull()) {
+                                        null -> itemQuantity.value
+                                        else -> it
+                                    }
                                 }
-                            }
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
+                            },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "Use the arrow below to select your supplier:")
+                        IconButton(
+                            onClick = { expanded.value = true },
+                            modifier = Modifier.padding(bottom = 40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Drop down icon"
+                            )
+                            suppliersList.value?.let { TopAppBarDropDownMenu2(it, expanded, context, selectedSupplier, isVisible, show) }
+                        }
+                        MyText2(selectedSupplier, isVisible.value)
+                    }
 
                 },
 
@@ -338,7 +340,8 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                                 createProductTransaction(
                                     selectedProduct.value,
                                     itemQuantity.value.toDouble(),
-                                    selectedProductList
+                                    selectedProductList,
+                                    selectedSupplier.value
                                 )
                             }
                             searchText = ""
@@ -368,80 +371,6 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
             )
         }
 
-        //This is for entering the cash offered
-        if (cashDialog.value) {
-
-            AlertDialog(
-                onDismissRequest = {
-                    // Dismiss the dialog when the user clicks outside the dialog or on the back
-                    // button. If you want to disable that functionality, simply use an empty
-                    // onCloseRequest.
-                    cashDialog.value = false
-                },
-                title = {
-                    Text(
-                        text = "Enter Amount",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                },
-                text = {
-                    TextField(
-                        value = cashOffered.value,
-                        onValueChange = {
-                            if (it.isEmpty()) {
-                                cashOffered.value = it
-                            } else {
-                                cashOffered.value = when (it.toDoubleOrNull()) {
-                                    null -> cashOffered.value
-                                    else -> it
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-
-                },
-
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            cashDialog.value = false
-                            if (cashOffered.value.isNotEmpty()) {
-                                change.value = (cashOffered.value.toDouble() - totalBillAmount.value).toString()
-                                Toast.makeText(
-                                    context,
-                                    "Transaction successful, your change is ${change.value}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                            searchText = ""
-                            cashOffered.value = ""
-                            transactionDialog.value = true
-                        }, modifier = Modifier.padding(start = 75.dp, end = 16.dp)
-                    ) {
-                        Text("Make Sale")
-                    }
-                },
-                dismissButton = {
-                    Button(
-                        onClick = {
-                            cashDialog.value = false
-                            cashOffered.value = ""
-                            searchText = ""
-                        }, colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
-                    ) {
-                        Text("Cancel")
-                    }
-                },
-                properties = DialogProperties(
-                    dismissOnClickOutside = false,
-                    dismissOnBackPress = false
-                )
-            )
-        }
-
         if (transactionDialog.value) {
 
             AlertDialog(
@@ -453,24 +382,26 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                 },
                 title = {
                     Text(
-                        text = "Transaction Successful",
+                        text = "Confirm",
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 },
                 text = {
-                    Text(text = "Your change is ${change.value}")
+                    Text(text = "Are you sure you want to save this invoice?")
 
                 },
 
                 confirmButton = {
                     Button(
                         onClick = {
+                            saveProductTransaction(selectedProductList, viewModel3)
                             transactionDialog.value = false
                             selectedProductList.clear() //clears the selected products after transaction
+                            Toast.makeText(context, "Invoice saved successfully!!", Toast.LENGTH_SHORT).show()
                         }, modifier = Modifier.padding(start = 75.dp, end = 16.dp)
                     ) {
-                        Text("Print")
+                        Text("Yes")
                     }
                 },
                 dismissButton = {
@@ -480,7 +411,7 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                             selectedProductList.clear() //clears the selected products after transaction
                         }, colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
                     ) {
-                        Text("Cancel")
+                        Text("No")
                     }
                 },
                 properties = DialogProperties(
@@ -489,76 +420,55 @@ fun SalesScreen(navController: NavHostController, viewModel: ProductViewModel = 
                 )
             )
         }
-
-
-
-
     }
+
 }
 
-
+fun saveProductTransaction(selectedProductList: SnapshotStateList<ProductTransaction>, viewModel: ProductTransactionViewModel) {
+    for (productTransaction in selectedProductList) {
+        viewModel.saveProductTransactionToDatabase(productTransaction)
+    }
+}
 
 @Composable
-fun SampleItems(item: ProductTransaction, columnPortionSize: Dp){
+fun TopAppBarDropDownMenu2(
+    list: List<Supplier>,
+    expanded: MutableState<Boolean>,
+    context: Context,
+    selectedSupplier: MutableState<Supplier>,
+    isVisible: MutableState<Boolean>,
+    show: MutableState<Boolean>
+) {
+
+    DropdownMenu(expanded = expanded.value, onDismissRequest = { expanded.value = false }) {
+        for (i in list) {
+            Text(text = i.supplierName!!, modifier = Modifier
+                .clickable {
+                    selectedSupplier.value = i
+                    isVisible.value = true
+                    show.value = false
+                    expanded.value = false
+                }
+                .padding(start = 4.dp, end = 4.dp, bottom = 30.dp))
+        }
+    }
+}
+
+@Composable
+fun MyText2(selectedSupplier: MutableState<Supplier>, isVisible: Boolean) {
+    if (isVisible) {
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .height(30.dp)
-                .background(MaterialTheme.colors.surface), horizontalArrangement = Arrangement.SpaceBetween
+                .padding(bottom = 40.dp), horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = item.product.productName,
-                modifier = Modifier
-                    .width(columnPortionSize + 30.dp)
-                    .padding(bottom = 10.dp)
-            )
-            Text(
-                text = item.productQuantity.toString(),
-                modifier = Modifier
-                    .width(columnPortionSize - 10.dp)
-                    .padding(bottom = 10.dp)
-            )
-            Text(
-                text = "M${
-                    String.format(
-                        "%.2f",
-                        item.product.productPrice.toDoubleOrNull()
-                    )
-                }",
-                modifier = Modifier
-                    .width(columnPortionSize - 10.dp)
-                    .padding(bottom = 10.dp)
-            )
-            Text(
-                text = "M${String.format("%.2f", item.productTotalAmount)}",
-                modifier = Modifier
-                    .width(columnPortionSize - 10.dp)
-                    .padding(bottom = 10.dp)
+                text = selectedSupplier.value.supplierName,
+                Modifier.padding(end = 10.dp),
+                fontWeight = FontWeight.Bold
             )
         }
-}
 
-
-fun createProductTransaction(
-    product: Product,
-    itemQuantity: Double,
-    selectedProductList: MutableList<ProductTransaction>,
-    supplier: Supplier = Supplier("", "", "")
-) {
-    val productTotalAmount = product.productPrice.toDouble().times(itemQuantity)
-    val productTransaction = ProductTransaction(product, itemQuantity, productTotalAmount, supplier)
-    selectedProductList.add(productTransaction)
-}
-
-fun calculateTotalAmount(
-    selectedProductList: MutableList<ProductTransaction>,
-    totalBillAmount: MutableState<Double>
-): Double {
-    val totalAmountsList = mutableListOf<Double>()
-    for (i in selectedProductList) {
-        totalAmountsList.add(i.productTotalAmount)
     }
-    totalBillAmount.value = totalAmountsList.sumOf { it }
-    return totalBillAmount.value
 }
 

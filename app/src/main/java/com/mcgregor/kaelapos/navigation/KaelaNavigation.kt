@@ -11,6 +11,7 @@ import com.mcgregor.kaelapos.screens.MainScreen
 import com.mcgregor.kaelapos.screens.NewItemScreen
 import com.mcgregor.kaelapos.screens.NewSupplierScreen
 import com.mcgregor.kaelapos.screens.ProductSelectionScreen
+import com.mcgregor.kaelapos.screens.ReceiveItemScreen
 import com.mcgregor.kaelapos.screens.SalesScreen
 import com.mcgregor.kaelapos.screens.SuppliersScreen
 
@@ -53,6 +54,10 @@ fun KaelaNavigation() {
 
         composable(KaelaScreens.NewSupplierScreen.name) {
             NewSupplierScreen(navController = navController)
+        }
+        
+        composable(KaelaScreens.ReceiveItemScreen.name) {
+            ReceiveItemScreen(navController = navController)
         }
 
     }

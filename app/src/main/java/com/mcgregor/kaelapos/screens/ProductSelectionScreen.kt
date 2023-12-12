@@ -60,7 +60,6 @@ fun ProductSelectionScreen(
             }
         }
 
-
         MyText(selectedProduct, isVisible.value)
 
         Row() {

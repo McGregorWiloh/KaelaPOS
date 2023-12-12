@@ -89,6 +89,10 @@ dependencies {
     // JSON Converter
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
+    //Google Gson (JSON) converter library used to convert Java Objects into their JSON representation.
+    //It can also be used to convert a JSON string to an equivalent Java object.
+    implementation 'com.google.code.gson:gson:2.10.1'
+
     //Room
     implementation "androidx.room:room-runtime:2.5.1"
     annotationProcessor "androidx.room:room-compiler:2.5.1"
