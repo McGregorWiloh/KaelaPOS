@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "KaelaPOS"
-include ':app'
+include (":app")
